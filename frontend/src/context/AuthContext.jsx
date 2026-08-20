@@ -6,8 +6,8 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedState, setSelectedState] = useState('Andhra Pradesh');
-  const [selectedDistrict, setSelectedDistrict] = useState('NTR / Vijayawada');
+  const [selectedState, setSelectedState] = useState('AP');
+  const [selectedDistrict, setSelectedDistrict] = useState('AP-NTR');
 
   useEffect(() => {
     checkLoggedInUser();
@@ -22,8 +22,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await apiService.getMe();
       setUser(res.data);
-      if (res.data.district) setSelectedDistrict(res.data.district);
-      if (res.data.state) setSelectedState(res.data.state);
+      if (res.data.district_id) setSelectedDistrict(res.data.district_id);
+      if (res.data.state_id) setSelectedState(res.data.state_id);
     } catch (err) {
       console.error('Session validation error:', err);
       localStorage.removeItem('token');

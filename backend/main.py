@@ -4,7 +4,7 @@ import os
 
 from database import engine, Base
 from seed_data import seed_database
-from routers import services, ai, auth_router, partners, requests, admin
+from routers import services, ai, auth_router, partners, requests, admin, locations, staff, training, freshness
 
 # Initialize database schema & seed data
 Base.metadata.create_all(bind=engine)
@@ -14,12 +14,12 @@ except Exception as e:
     print(f"Startup database seeding note: {e}")
 
 app = FastAPI(
-    title="Government Services Navigator API",
-    description="Intelligent AI-powered navigation, discovery, eligibility evaluation, and verified assistance layer for government services.",
-    version="1.0.0"
+    title="Government Service Provider (GSP V2) API",
+    description="AI-Powered Government Service Discovery, Guidance, Human Assistance & Verified Partner Network",
+    version="2.0.0"
 )
 
-# Configure CORS for React frontend (Vite default localhost ports)
+# Configure CORS for React frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -35,22 +35,27 @@ app.add_middleware(
 )
 
 # Register API Routers
+app.include_router(locations.router)
 app.include_router(services.router)
 app.include_router(ai.router)
 app.include_router(auth_router.router)
 app.include_router(partners.router)
 app.include_router(requests.router)
+app.include_router(staff.router)
+app.include_router(training.router)
+app.include_router(freshness.router)
 app.include_router(admin.router)
 
 @app.get("/api/health")
 def health_check():
     return {
         "status": "online",
-        "app": "Government Services Navigator API",
-        "version": "1.0.0",
+        "app": "GSP V2 Intelligence API",
+        "version": "2.0.0",
         "database": "SQLite (Development) / PostgreSQL Ready",
-        "verified_sources": "Andhra Pradesh MeeSeva, Meebhoomi, IGRS, Parivahan",
-        "last_verified_audit": "2026-08-10"
+        "location_hierarchy": "Multi-State (State -> District -> Mandal -> Locality)",
+        "service_records": "Service Intelligence Records (Grounded RAG)",
+        "last_source_audit": "2026-08-20"
     }
 
 if __name__ == "__main__":

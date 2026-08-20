@@ -8,25 +8,20 @@ import schemas
 
 router = APIRouter(prefix="/api/partners", tags=["Partners Marketplace"])
 
-@router.get("", response_model=List[schemas.PartnerOut])
+@router.get("", response_model=List[schemas.PartnerProfileOut])
 def get_partners(
-    district: Optional[str] = None,
-    service_id: Optional[str] = None,
+    district_id: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    q = db.query(models.Partner).filter(models.Partner.verification_status == "verified")
-    if district and district != "All":
-        q = q.filter(models.Partner.district == district)
+    q = db.query(models.PartnerProfile).filter(models.PartnerProfile.verification_status == "VERIFIED")
+    if district_id and district_id != "All":
+        q = q.filter(models.PartnerProfile.district_id == district_id)
     
-    partners = q.all()
-    if service_id:
-        partners = [p for p in partners if service_id in (p.supported_service_ids or [])]
-    
-    return partners
+    return q.all()
 
-@router.get("/{partner_id}", response_model=schemas.PartnerOut)
+@router.get("/{partner_id}", response_model=schemas.PartnerProfileOut)
 def get_partner_by_id(partner_id: int, db: Session = Depends(get_db)):
-    partner = db.query(models.Partner).filter(models.Partner.id == partner_id).first()
+    partner = db.query(models.PartnerProfile).filter(models.PartnerProfile.id == partner_id).first()
     if not partner:
         raise HTTPException(status_code=404, detail="Verified Partner center not found")
     return partner

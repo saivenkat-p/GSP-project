@@ -3,23 +3,36 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 import schemas
-from ai_engine import process_ai_navigation
+from ai_engine import process_ai_chat_navigation
 
-router = APIRouter(prefix="/api/ai", tags=["AI Navigator"])
+router = APIRouter(prefix="/api/ai", tags=["Grounded AI Assistant"])
 
-@router.post("/navigate", response_model=schemas.AINavigationResponse)
-def navigate_ai_service(
-    request: schemas.AIQueryRequest,
+@router.post("/chat", response_model=schemas.AINavigationResponse)
+def grounded_ai_chat(
+    req: schemas.AIChatRequest,
     db: Session = Depends(get_db)
 ):
-    """
-    Grounded AI Service Discovery Endpoint:
-    Returns strict JSON response matching AI Navigation contract (Feedback Item #5).
-    """
-    return process_ai_navigation(
-        query=request.query,
-        state=request.state or "Andhra Pradesh",
-        district=request.district,
-        selected_answers=request.selected_answers,
+    return process_ai_chat_navigation(
+        session_id=req.session_id or "session-default",
+        query=req.query,
+        state_id=req.state_id or "AP",
+        district_id=req.district_id or "AP-NTR",
+        mandal_name=req.mandal_name or "Vijayawada Urban",
+        selected_answers=req.selected_answers,
+        db=db
+    )
+
+@router.post("/navigate", response_model=schemas.AINavigationResponse)
+def grounded_ai_navigate(
+    req: schemas.AIChatRequest,
+    db: Session = Depends(get_db)
+):
+    return process_ai_chat_navigation(
+        session_id=req.session_id or "session-default",
+        query=req.query,
+        state_id=req.state_id or "AP",
+        district_id=req.district_id or "AP-NTR",
+        mandal_name=req.mandal_name or "Vijayawada Urban",
+        selected_answers=req.selected_answers,
         db=db
     )

@@ -1,171 +1,139 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Compass, MapPin, User, ShieldCheck, UserCheck, LogOut, Compass as CompassIcon, Search, LayoutDashboard, FileText, CheckCircle2 } from 'lucide-react';
+import { LocationBar } from './LocationBar';
+import { AIChatDrawer } from './AIChatDrawer';
+import { Compass, Search, ShieldCheck, PhoneCall, UserCheck, LayoutDashboard, Bot, LogOut, Grid, Bell, User, Sparkles } from 'lucide-react';
 
 export const Navbar = () => {
-  const { user, logout, demoSwitchRole, selectedState, setSelectedState, selectedDistrict, setSelectedDistrict } = useAuth();
+  const { user, logout, demoSwitchRole } = useAuth();
   const location = useLocation();
+  const [chatOpen, setChatOpen] = useState(false);
 
   const isActive = (path) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 glass-panel border-b border-slate-800 bg-slate-950/90 backdrop-blur-md">
-      {/* Top National / State Banner */}
-      <div className="bg-gradient-to-r from-saffron-600 via-amber-600 to-emerald-600 px-4 py-1 text-center text-xs font-semibold text-white tracking-wide flex items-center justify-between">
-        <div className="flex items-center gap-2 mx-auto">
-          <span>🇮🇳 GOVERNMENT SERVICES NAVIGATOR</span>
-          <span className="hidden md:inline text-amber-200">•</span>
-          <span className="hidden md:inline font-normal">Intelligent Discovery & Guidance Layer (Official Portals Authority)</span>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-saffron-500 to-amber-600 flex items-center justify-center text-white font-bold shadow-lg shadow-saffron-500/20 group-hover:scale-105 transition-transform">
-              <Compass className="w-6 h-6 animate-pulse" />
-            </div>
-            <div>
-              <span className="text-lg font-extrabold text-white tracking-tight flex items-center gap-1.5 font-heading">
-                GovNav <span className="text-saffron-500 text-xs px-2 py-0.5 rounded-full bg-saffron-500/10 border border-saffron-500/20">AP State</span>
-              </span>
-              <p className="text-[11px] text-slate-400 -mt-1 font-sans">Official Service Guidance Navigator</p>
-            </div>
-          </Link>
-
-          {/* District & Location Filter */}
-          <div className="hidden lg:flex items-center gap-2 bg-slate-900/90 px-3 py-1.5 rounded-full border border-slate-800 text-xs text-slate-300">
-            <MapPin className="w-3.5 h-3.5 text-saffron-400" />
-            <span className="text-slate-400">State & District:</span>
-            <select
-              value={selectedDistrict}
-              onChange={(e) => setSelectedDistrict(e.target.value)}
-              className="bg-transparent font-medium text-amber-400 focus:outline-none cursor-pointer"
-            >
-              <option value="NTR / Vijayawada" className="bg-slate-900 text-white">NTR / Vijayawada (AP)</option>
-              <option value="Visakhapatnam" className="bg-slate-900 text-white">Visakhapatnam (AP)</option>
-              <option value="Guntur" className="bg-slate-900 text-white">Guntur (AP)</option>
-              <option value="Tirupati" className="bg-slate-900 text-white">Tirupati (AP)</option>
-              <option value="Anantapur" className="bg-slate-900 text-white">Anantapur (AP)</option>
-            </select>
-          </div>
-
-          {/* Main Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
-            <Link
-              to="/discover"
-              className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 ${
-                isActive('/discover') ? 'bg-saffron-500/10 text-saffron-400 font-semibold' : 'text-slate-300 hover:text-white hover:bg-slate-900'
-              }`}
-            >
-              <Search className="w-4 h-4 text-saffron-400" />
-              <span>AI Service Navigator</span>
+    <>
+      <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-4">
+            {/* Brand Logo */}
+            <Link to="/" className="flex items-center gap-2.5 shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white font-bold shadow-sm">
+                <Compass className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-1.5 font-heading">
+                  GSP <span className="text-orange-600 text-xs px-2 py-0.5 rounded-full bg-orange-50 font-bold border border-orange-200">V2</span>
+                </span>
+                <p className="text-[10px] text-slate-500 font-medium -mt-1 font-sans">Your Government Service Partner</p>
+              </div>
             </Link>
 
-            <Link
-              to="/assistance"
-              className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 ${
-                isActive('/assistance') ? 'bg-saffron-500/10 text-saffron-400 font-semibold' : 'text-slate-300 hover:text-white hover:bg-slate-900'
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4 text-sky-400" />
-              <span>Verified Assistance</span>
-            </Link>
+            {/* Location Selector */}
+            <LocationBar />
 
-            {user?.role === 'citizen' && (
+            {/* Navigation Items (Exact Mockup Items) */}
+            <nav className="hidden md:flex items-center gap-2 text-xs font-semibold">
+              <Link
+                to="/"
+                className={`px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
+                  isActive('/') ? 'bg-orange-50 text-orange-600 font-bold border border-orange-200' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <span>Home</span>
+              </Link>
+
+              <Link
+                to="/services/catalog"
+                className={`px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
+                  isActive('/services/catalog') ? 'bg-orange-50 text-orange-600 font-bold border border-orange-200' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Grid className="w-4 h-4 text-slate-500" />
+                <span>All Services</span>
+              </Link>
+
+              <button
+                onClick={() => setChatOpen(true)}
+                className="px-3.5 py-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all flex items-center gap-1.5"
+              >
+                <Bot className="w-4 h-4 text-orange-500" />
+                <span>AI Assistant</span>
+              </button>
+
               <Link
                 to="/dashboard"
-                className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 ${
-                  isActive('/dashboard') ? 'bg-saffron-500/10 text-saffron-400 font-semibold' : 'text-slate-300 hover:text-white hover:bg-slate-900'
+                className={`px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
+                  isActive('/dashboard') ? 'bg-orange-50 text-orange-600 font-bold border border-orange-200' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
-                <LayoutDashboard className="w-4 h-4 text-emerald-400" />
-                <span>My Dashboard</span>
+                <span>My Requests</span>
               </Link>
-            )}
 
-            {user?.role === 'partner' && (
               <Link
-                to="/partner-dashboard"
-                className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 ${
-                  isActive('/partner-dashboard') ? 'bg-saffron-500/10 text-saffron-400 font-semibold' : 'text-slate-300 hover:text-white hover:bg-slate-900'
+                to="/services/catalog"
+                className={`px-3.5 py-2 rounded-xl transition-all flex items-center gap-1.5 ${
+                  isActive('/updates') ? 'bg-orange-50 text-orange-600 font-bold border border-orange-200' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
-                <ShieldCheck className="w-4 h-4 text-amber-400" />
-                <span>Partner Dashboard</span>
+                <span>Updates</span>
               </Link>
-            )}
+            </nav>
 
-            {user?.role === 'admin' && (
-              <Link
-                to="/admin-dashboard"
-                className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 ${
-                  isActive('/admin-dashboard') ? 'bg-saffron-500/10 text-saffron-400 font-semibold' : 'text-slate-300 hover:text-white hover:bg-slate-900'
-                }`}
-              >
-                <UserCheck className="w-4 h-4 text-indigo-400" />
-                <span>Admin Dashboard</span>
-              </Link>
-            )}
-          </nav>
-
-          {/* User Auth & Instant Demo Switcher */}
-          <div className="flex items-center gap-2">
-            {/* Quick Demo Switcher Buttons */}
-            <div className="hidden sm:flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs">
-              <span className="text-[10px] text-slate-500 font-bold px-1.5 uppercase">Switch Role:</span>
-              <button
-                onClick={() => demoSwitchRole('citizen')}
-                className={`px-2 py-1 rounded text-xs transition-colors ${
-                  user?.role === 'citizen' ? 'bg-saffron-500 text-white font-semibold' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Citizen
-              </button>
-              <button
-                onClick={() => demoSwitchRole('partner')}
-                className={`px-2 py-1 rounded text-xs transition-colors ${
-                  user?.role === 'partner' ? 'bg-sky-500 text-white font-semibold' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Partner 🛡️
-              </button>
-              <button
-                onClick={() => demoSwitchRole('admin')}
-                className={`px-2 py-1 rounded text-xs transition-colors ${
-                  user?.role === 'admin' ? 'bg-indigo-600 text-white font-semibold' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Admin
-              </button>
-            </div>
-
-            {user ? (
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-200 hidden md:inline px-2 py-1 rounded bg-slate-900 border border-slate-800">
-                  {user.name.split(' ')[0]} ({user.role})
+            {/* Notification Bell & Profile Avatar */}
+            <div className="flex items-center gap-3">
+              {/* Bell Icon with Red Badge */}
+              <button className="relative p-2 text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] font-extrabold flex items-center justify-center">
+                  3
                 </span>
+              </button>
+
+              {/* Profile Avatar Card */}
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+                <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden shrink-0 border border-slate-300">
+                  <img
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80"
+                    alt="Sai Kumar Profile"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="hidden sm:block text-left text-xs">
+                  <span className="font-bold text-slate-900 block leading-tight">Sai Kumar</span>
+                  <span className="text-[10px] text-slate-500 block">Citizen</span>
+                </div>
+              </div>
+
+              {/* Role Switcher */}
+              <div className="hidden lg:flex items-center gap-1 bg-slate-100 p-1 rounded-xl text-[11px]">
                 <button
-                  onClick={logout}
-                  className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-900 transition-colors"
-                  title="Sign Out"
+                  onClick={() => demoSwitchRole('CITIZEN')}
+                  className={`px-2 py-0.5 rounded-lg text-[10px] ${user?.role === 'CITIZEN' ? 'bg-orange-500 text-white font-bold' : 'text-slate-600'}`}
                 >
-                  <LogOut className="w-4 h-4" />
+                  Citizen
+                </button>
+                <button
+                  onClick={() => demoSwitchRole('STAFF')}
+                  className={`px-2 py-0.5 rounded-lg text-[10px] ${user?.role === 'STAFF' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-600'}`}
+                >
+                  Staff 📞
+                </button>
+                <button
+                  onClick={() => demoSwitchRole('PARTNER')}
+                  className={`px-2 py-0.5 rounded-lg text-[10px] ${user?.role === 'PARTNER' ? 'bg-sky-600 text-white font-bold' : 'text-slate-600'}`}
+                >
+                  Partner 🛡️
                 </button>
               </div>
-            ) : (
-              <Link
-                to="/login"
-                className="px-4 py-2 rounded-lg bg-saffron-500 hover:bg-saffron-600 text-white font-medium text-xs shadow-md transition-colors"
-              >
-                Sign In
-              </Link>
-            )}
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Grounded AI Chat Drawer */}
+      <AIChatDrawer isOpen={chatOpen} onClose={() => setChatOpen(false)} />
+    </>
   );
 };

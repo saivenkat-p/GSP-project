@@ -1,91 +1,96 @@
 import React from 'react';
-import { Compass, Landmark, ShieldCheck, ExternalLink, Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Compass, PhoneCall, MessageSquare, Facebook, Twitter, Youtube, Instagram } from 'lucide-react';
 
 export const Footer = () => {
   return (
-    <footer className="bg-slate-950 border-t border-slate-800 text-slate-400 text-xs py-10 mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand & Mandate */}
-          <div className="space-y-3 md:col-span-2">
-            <div className="flex items-center gap-2 text-white font-bold text-base font-heading">
-              <div className="w-7 h-7 rounded-lg bg-saffron-500 flex items-center justify-center text-white">
-                <Compass className="w-4 h-4" />
+    <footer className="bg-white border-t border-slate-200 text-slate-700 text-xs">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+          {/* Logo & Tagline */}
+          <div className="md:col-span-2 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold shadow-xs">
+                <Compass className="w-5 h-5" />
               </div>
-              <span>Government Services Navigator</span>
+              <span className="text-xl font-black text-slate-900 font-heading">GSP</span>
             </div>
-            <p className="text-slate-400 leading-relaxed max-w-md">
-              An intelligent navigation, discovery, eligibility evaluation, and verified assistance layer. 
-              Helping citizens understand: <em className="text-saffron-400">"I need to get this done. What exactly should I do?"</em>
+
+            <p className="text-xs text-slate-500 leading-relaxed max-w-sm font-sans">
+              Your trusted partner for government services. Verified information, end-to-end assistance.
             </p>
 
-            {/* Non-negotiable product rule disclaimer box */}
-            <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-300 space-y-1">
-              <div className="flex items-center gap-1.5 text-amber-400 font-semibold uppercase">
-                <Landmark className="w-3.5 h-3.5" />
-                <span>Non-Negotiable Platform Boundary</span>
+            <div className="space-y-1">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Follow Us</span>
+              <div className="flex items-center gap-2">
+                <button className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-blue-600 flex items-center justify-center transition-colors">
+                  <Facebook className="w-3.5 h-3.5" />
+                </button>
+                <button className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-sky-500 flex items-center justify-center transition-colors">
+                  <Twitter className="w-3.5 h-3.5" />
+                </button>
+                <button className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-red-600 flex items-center justify-center transition-colors">
+                  <Youtube className="w-3.5 h-3.5" />
+                </button>
+                <button className="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 text-pink-600 flex items-center justify-center transition-colors">
+                  <Instagram className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <p className="text-slate-400">
-                This platform does NOT replace government departments or official government portals. 
-                All official applications remain executed directly on official government authority websites (AP MeeSeva, Meebhoomi, IGRS AP, Parivahan).
-              </p>
             </div>
           </div>
 
-          {/* Official AP Government Portals */}
+          {/* Quick Links */}
           <div className="space-y-3">
-            <h4 className="text-slate-200 font-bold uppercase tracking-wider text-[11px] font-heading">Official AP Government Portals</h4>
-            <ul className="space-y-2 text-slate-400">
-              <li>
-                <a href="https://ap.meeseva.gov.in" target="_blank" rel="noreferrer" className="hover:text-saffron-400 transition-colors flex items-center gap-1">
-                  <span>AP MeeSeva Portal</span>
-                  <ExternalLink className="w-3 h-3 text-slate-600" />
-                </a>
-              </li>
-              <li>
-                <a href="http://meebhoomi.ap.gov.in" target="_blank" rel="noreferrer" className="hover:text-saffron-400 transition-colors flex items-center gap-1">
-                  <span>Meebhoomi AP Land Records</span>
-                  <ExternalLink className="w-3 h-3 text-slate-600" />
-                </a>
-              </li>
-              <li>
-                <a href="https://registration.ap.gov.in" target="_blank" rel="noreferrer" className="hover:text-saffron-400 transition-colors flex items-center gap-1">
-                  <span>IGRS AP Encumbrance Portal</span>
-                  <ExternalLink className="w-3 h-3 text-slate-600" />
-                </a>
-              </li>
-              <li>
-                <a href="https://sarathi.parivahan.gov.in" target="_blank" rel="noreferrer" className="hover:text-saffron-400 transition-colors flex items-center gap-1">
-                  <span>Parivahan Transport Portal</span>
-                  <ExternalLink className="w-3 h-3 text-slate-600" />
-                </a>
-              </li>
+            <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">Quick Links</h4>
+            <ul className="space-y-2 text-slate-600 font-medium">
+              <li><Link to="/about" className="hover:text-orange-600">About GSP</Link></li>
+              <li><Link to="/how-it-works" className="hover:text-orange-600">How It Works</Link></li>
+              <li><Link to="/services/catalog" className="hover:text-orange-600">Service Categories</Link></li>
+              <li><Link to="/assistance" className="hover:text-orange-600">Help & Support</Link></li>
+              <li><Link to="/contact" className="hover:text-orange-600">Contact Us</Link></li>
             </ul>
           </div>
 
-          {/* Verification & Trust Standards */}
+          {/* For Citizens */}
           <div className="space-y-3">
-            <h4 className="text-slate-200 font-bold uppercase tracking-wider text-[11px] font-heading">Trust & Verification</h4>
-            <ul className="space-y-2 text-slate-400">
-              <li className="flex items-center gap-1.5 text-emerald-400">
-                <ShieldCheck className="w-4 h-4" />
-                <span>Verified Source Metadata</span>
-              </li>
-              <li>Official Fee vs Partner Fee Separation</li>
-              <li>Grounded RAG (No AI Hallucinations)</li>
-              <li>Andhra Pradesh & National Scope</li>
+            <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">For Citizens</h4>
+            <ul className="space-y-2 text-slate-600 font-medium">
+              <li><Link to="/services/catalog" className="hover:text-orange-600">All Services</Link></li>
+              <li><Link to="/dashboard" className="hover:text-orange-600">Track Request</Link></li>
+              <li><Link to="/eligibility" className="hover:text-orange-600">Check Eligibility</Link></li>
+              <li><Link to="/documents" className="hover:text-orange-600">Document Guide</Link></li>
+              <li><Link to="/payments" className="hover:text-orange-600">Feed & Payments</Link></li>
             </ul>
+          </div>
+
+          {/* Need Help Column */}
+          <div className="space-y-3">
+            <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">Resources & Help</h4>
+            <ul className="space-y-2 text-slate-600 font-medium pb-2">
+              <li><Link to="/schemes" className="hover:text-orange-600">Schemes & Benefits</Link></li>
+              <li><Link to="/scholarships" className="hover:text-orange-600">Scholarships</Link></li>
+            </ul>
+
+            <div className="p-3 rounded-2xl bg-orange-50 border border-orange-100 space-y-2">
+              <span className="text-[11px] font-bold text-orange-800 flex items-center gap-1">
+                <PhoneCall className="w-3.5 h-3.5 text-orange-600" />
+                <span>Need Help?</span>
+              </span>
+              <p className="text-[11px] text-slate-600">Our support team is here to help you</p>
+              <div className="font-extrabold text-slate-900 text-sm">1800-123-4567</div>
+              <span className="text-[10px] text-slate-500 block">Toll Free • 24/7 Available</span>
+            </div>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500">
-          <p>© 2026 Government Services Navigator. Built for Indian Citizen Empowerment.</p>
+        <div className="pt-8 mt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-slate-500 font-medium">
+          <div>© 2026 GSP - Government Services Platform. All rights reserved.</div>
           <div className="flex items-center gap-4">
-            <span className="text-slate-400">Official Source Audit: <strong className="text-slate-300">2026-08-10</strong></span>
-            <span>•</span>
-            <span>Version 1.0.0</span>
+            <Link to="/privacy" className="hover:underline">Privacy Policy</Link>
+            <span>|</span>
+            <Link to="/terms" className="hover:underline">Terms of Service</Link>
+            <span>|</span>
+            <Link to="/disclosure" className="hover:underline">Disclosure</Link>
           </div>
         </div>
       </div>

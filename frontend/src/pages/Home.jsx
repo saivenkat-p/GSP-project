@@ -1,16 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { apiService } from '../services/api';
 import {
   Search, Sparkles, ArrowRight, ShieldCheck, Landmark, CheckCircle2, Bot, Grid, FileText,
   UserCheck, HeartPulse, GraduationCap, Car, Vote, Wheat, Zap, Building2, HelpCircle,
-  Bell, ChevronLeft, ChevronRight, Clock, Award, Users, PhoneCall, Check, ExternalLink, Calendar, RefreshCw
+  Bell, ChevronLeft, ChevronRight, Clock, Award, Users, PhoneCall, Check, ExternalLink, Calendar, RefreshCw, Compass
 } from 'lucide-react';
 
 export const Home = () => {
   const [query, setQuery] = useState('');
+  const [heroBanners, setHeroBanners] = useState([]);
   const [carouselIndex, setCarouselIndex] = useState(0);
-  const [schemesIndex, setSchemesIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+  const [loadingBanners, setLoadingBanners] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchBanners();
+  }, []);
+
+  useEffect(() => {
+    if (heroBanners.length === 0) return;
+    const interval = setInterval(() => {
+      handleNextBanner();
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [carouselIndex, heroBanners]);
+
+  const fetchBanners = async () => {
+    try {
+      setLoadingBanners(true);
+      const res = await apiService.getHeroBanners();
+      setHeroBanners(res.data || []);
+    } catch (err) {
+      console.error('Error loading dynamic opportunity banners:', err);
+    } finally {
+      setLoadingBanners(false);
+    }
+  };
+
+  const handleNextBanner = () => {
+    setFade(false);
+    setTimeout(() => {
+      setCarouselIndex((prev) => (prev + 1) % heroBanners.length);
+      setFade(true);
+    }, 250);
+  };
+
+  const handlePrevBanner = () => {
+    setFade(false);
+    setTimeout(() => {
+      setCarouselIndex((prev) => (prev - 1 + heroBanners.length) % heroBanners.length);
+      setFade(true);
+    }, 250);
+  };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -18,32 +61,20 @@ export const Home = () => {
     navigate(`/discover?q=${encodeURIComponent(query)}`);
   };
 
-  const heroBanners = [
-    {
-      title: "YSR Rythu Bharosa",
-      badge: "New Scheme Launched!",
-      subtitle: "Financial assistance of ₹13,500 per year to all eligible farmers in Andhra Pradesh.",
-      amount: "₹13,500 Annual Assistance",
-      tag1: "Direct Benefit Transfer",
-      tag2: "Easy Online Application",
-      query: "rythu bharosa farmer assistance",
-      bgGradient: "from-amber-50 via-emerald-50 to-emerald-100",
-      accentColor: "text-emerald-700",
-      buttonColor: "bg-emerald-700 hover:bg-emerald-800 text-white"
-    },
-    {
-      title: "Jagananna Vidya Deevena",
-      badge: "Scholarship Support 2026",
-      subtitle: "100% Fee Reimbursement for Higher Education students in Andhra Pradesh.",
-      amount: "Full Fee Reimbursement",
-      tag1: "College & Hostel Aid",
-      tag2: "Direct Bank Transfer",
-      query: "vidya deevena scholarship",
-      bgGradient: "from-sky-50 via-blue-50 to-indigo-100",
-      accentColor: "text-indigo-700",
-      buttonColor: "bg-indigo-700 hover:bg-indigo-800 text-white"
-    }
-  ];
+  const currentBanner = heroBanners[carouselIndex] || {
+    category_tag: "🏛️ New Government Scheme",
+    title: "Dynamic Citizen Opportunity Banner",
+    subtitle: "Continuously updated scheme and scholarship information sourced from the verified freshness engine.",
+    benefit_amount: "Verified Opportunity",
+    tag1: "Data-Driven Engine",
+    tag2: "100% Official Sources",
+    deadline: "31 Aug 2026",
+    verification_badge: "🟢 Government Verified",
+    action_query: "government schemes and benefits",
+    official_source_url: "https://ap.meeseva.gov.in",
+    last_verified: "2026-08-20",
+    color_theme: "emerald"
+  };
 
   const currentSchemes = [
     {
@@ -53,8 +84,6 @@ export const Home = () => {
       deadline: "30 Sep 2026",
       tag: "Apply Now",
       bgClass: "bg-emerald-50/80 border-emerald-200 text-emerald-950",
-      ribbonClass: "bg-emerald-600 text-white",
-      iconBg: "bg-emerald-100 text-emerald-700",
       query: "student scholarship"
     },
     {
@@ -64,8 +93,6 @@ export const Home = () => {
       deadline: "31 Aug 2026",
       tag: "Apply Now",
       bgClass: "bg-purple-50/80 border-purple-200 text-purple-950",
-      ribbonClass: "bg-purple-600 text-white",
-      iconBg: "bg-purple-100 text-purple-700",
       query: "aarogyasri health card"
     },
     {
@@ -75,8 +102,6 @@ export const Home = () => {
       deadline: "15 Oct 2026",
       tag: "Apply Now",
       bgClass: "bg-amber-50/80 border-amber-200 text-amber-950",
-      ribbonClass: "bg-amber-600 text-white",
-      iconBg: "bg-amber-100 text-amber-700",
       query: "housing pmay patta"
     },
     {
@@ -86,8 +111,6 @@ export const Home = () => {
       deadline: "31 Aug 2026",
       tag: "Apply Now",
       bgClass: "bg-blue-50/80 border-blue-200 text-blue-950",
-      ribbonClass: "bg-blue-600 text-white",
-      iconBg: "bg-blue-100 text-blue-700",
       query: "annadata farmer assistance"
     }
   ];
@@ -100,11 +123,11 @@ export const Home = () => {
   ];
 
   const todaysUpdates = [
-    { title: "New Scheme Launched: AP Yuva Vikasam", time: "2 hours ago", type: "scheme" },
-    { title: "Birth Certificate procedure updated", time: "4 hours ago", type: "service" },
-    { title: "Driving Licence rule changes effective", time: "6 hours ago", type: "rule" },
-    { title: "Scholarship deadline extended", time: "8 hours ago", type: "deadline" },
-    { title: "New MeeSeva service added", time: "10 hours ago", type: "service" }
+    { title: "New Scheme Launched: AP Yuva Vikasam", time: "2 hours ago" },
+    { title: "Birth Certificate procedure updated", time: "4 hours ago" },
+    { title: "Driving Licence rule changes effective", time: "6 hours ago" },
+    { title: "Scholarship deadline extended", time: "8 hours ago" },
+    { title: "New MeeSeva service added", time: "10 hours ago" }
   ];
 
   const userReminders = [
@@ -113,7 +136,6 @@ export const Home = () => {
       status: "Expires in 24 Days",
       date: "Expiry Date: 12 Sep 2026",
       action: "Renew Now",
-      level: "red",
       bg: "bg-red-50/80 border-red-200",
       badgeClass: "bg-red-100 text-red-700 font-bold",
       btnClass: "bg-red-600 hover:bg-red-700 text-white"
@@ -123,7 +145,6 @@ export const Home = () => {
       status: "Review Suggested",
       date: "Update your documents",
       action: "Review Now",
-      level: "yellow",
       bg: "bg-amber-50/80 border-amber-200",
       badgeClass: "bg-amber-100 text-amber-700 font-bold",
       btnClass: "bg-amber-600 hover:bg-amber-700 text-white"
@@ -133,7 +154,6 @@ export const Home = () => {
       status: "No Action Required",
       date: "Valid til: 31 Dec 2030",
       action: "✓ Valid",
-      level: "green",
       bg: "bg-emerald-50/80 border-emerald-200",
       badgeClass: "bg-emerald-100 text-emerald-700 font-bold",
       btnClass: "bg-emerald-600 text-white"
@@ -153,83 +173,105 @@ export const Home = () => {
     { name: "Caste Certificate", count: "4 Services", id: "srv-caste-cert", icon: GraduationCap, color: "text-cyan-500 bg-cyan-50" }
   ];
 
-  const currentBanner = heroBanners[carouselIndex];
-
   return (
     <div className="bg-slate-50 min-h-screen text-slate-900 font-sans pb-16 space-y-8">
-      {/* 1. HERO CAROUSEL BANNER */}
+      {/* 1. DYNAMIC GOVERNMENT OPPORTUNITY HERO BANNER (DATA-DRIVEN ROTATION / FADE) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className={`relative rounded-3xl p-6 sm:p-10 bg-gradient-to-r ${currentBanner.bgGradient} border border-slate-200/80 shadow-md flex flex-col lg:flex-row items-center justify-between gap-8 transition-all`}>
+        <div className="relative rounded-3xl p-6 sm:p-10 bg-gradient-to-r from-amber-50 via-emerald-50 to-indigo-50 border border-slate-200/80 shadow-md overflow-hidden">
           {/* Carousel Arrows */}
           <button
-            onClick={() => setCarouselIndex((carouselIndex - 1 + heroBanners.length) % heroBanners.length)}
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 shadow-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-white transition-colors"
+            onClick={handlePrevBanner}
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 shadow-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-white transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
-            onClick={() => setCarouselIndex((carouselIndex + 1) % heroBanners.length)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 shadow-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-white transition-colors"
+            onClick={handleNextBanner}
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 shadow-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-white transition-colors"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
 
-          {/* Left Content */}
-          <div className="space-y-4 max-w-2xl pl-6">
-            <span className="inline-block px-3.5 py-1 rounded-full bg-white/80 text-emerald-800 font-extrabold text-xs tracking-wide shadow-sm border border-emerald-200">
-              {currentBanner.badge}
-            </span>
+          {/* Banner Body with Fade Transition */}
+          <div className={`transition-opacity duration-300 flex flex-col lg:flex-row items-center justify-between gap-8 ${fade ? 'opacity-100' : 'opacity-0'}`}>
+            {/* Left Content */}
+            <div className="space-y-4 max-w-2xl pl-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-block px-3.5 py-1 rounded-full bg-white/90 text-orange-600 font-extrabold text-xs tracking-wide shadow-xs border border-orange-200">
+                  {currentBanner.category_tag}
+                </span>
+                <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  {currentBanner.verification_badge}
+                </span>
+              </div>
 
-            <h1 className="text-3xl sm:text-5xl font-black text-slate-900 font-heading tracking-tight leading-tight">
-              {currentBanner.title}
-            </h1>
+              <h1 className="text-2xl sm:text-4xl font-black text-slate-900 font-heading tracking-tight leading-tight">
+                {currentBanner.title}
+              </h1>
 
-            <p className="text-sm sm:text-base text-slate-700 leading-relaxed font-medium">
-              {currentBanner.subtitle}
-            </p>
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-medium">
+                {currentBanner.subtitle}
+              </p>
 
-            <div className="pt-2">
-              <button
-                onClick={() => navigate(`/discover?q=${encodeURIComponent(currentBanner.query)}`)}
-                className={`px-8 py-3.5 rounded-2xl ${currentBanner.buttonColor} font-bold text-sm shadow-lg transition-all flex items-center gap-2`}
-              >
-                <span>Check Eligibility</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              <div className="pt-2 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={() => navigate(`/discover?q=${encodeURIComponent(currentBanner.action_query)}`)}
+                  className="px-8 py-3.5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2"
+                >
+                  <span>Check Eligibility</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <a
+                  href={currentBanner.official_source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-3 rounded-2xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold text-xs flex items-center gap-1.5 transition-colors"
+                >
+                  <span>Official Source</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
             </div>
-          </div>
 
-          {/* Right Highlights & Emblems */}
-          <div className="flex flex-wrap lg:flex-col gap-3 shrink-0">
-            <div className="p-4 rounded-2xl bg-white/90 border border-slate-200/80 shadow-sm flex items-center gap-3 text-xs">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                ₹
+            {/* Right Highlights & Verified Metric Cards */}
+            <div className="flex flex-wrap lg:flex-col gap-3 shrink-0">
+              <div className="p-4 rounded-2xl bg-white/90 border border-slate-200/80 shadow-xs flex items-center gap-3 text-xs">
+                <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold">
+                  ₹
+                </div>
+                <div>
+                  <span className="font-bold text-slate-900 block">{currentBanner.benefit_amount}</span>
+                  <span className="text-slate-500 text-[11px]">Direct Citizen Benefit</span>
+                </div>
               </div>
-              <div>
-                <span className="font-bold text-slate-900 block">{currentBanner.amount}</span>
-                <span className="text-slate-500 text-[11px]">Financial Scheme</span>
-              </div>
-            </div>
 
-            <div className="p-4 rounded-2xl bg-white/90 border border-slate-200/80 shadow-sm flex items-center gap-3 text-xs">
-              <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="font-bold text-slate-900 block">{currentBanner.tag1}</span>
-                <span className="text-slate-500 text-[11px]">100% Verified Channel</span>
+              <div className="p-4 rounded-2xl bg-white/90 border border-slate-200/80 shadow-xs flex items-center gap-3 text-xs">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="font-bold text-slate-900 block">Deadline: {currentBanner.deadline}</span>
+                  <span className="text-slate-500 text-[11px]">Verified on {currentBanner.last_verified}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Carousel Pagination Dots */}
+        {/* Dynamic Pagination Dots Indicator (● ○ ○ ○ ○) */}
         <div className="flex items-center justify-center gap-2 pt-3">
-          {heroBanners.map((_, idx) => (
+          {(heroBanners.length > 0 ? heroBanners : [1]).map((_, idx) => (
             <button
               key={idx}
-              onClick={() => setCarouselIndex(idx)}
-              className={`w-2.5 h-2.5 rounded-full transition-all ${carouselIndex === idx ? 'bg-orange-500 w-6' : 'bg-slate-300'}`}
+              onClick={() => {
+                setFade(false);
+                setTimeout(() => {
+                  setCarouselIndex(idx);
+                  setFade(true);
+                }, 200);
+              }}
+              className={`h-2.5 rounded-full transition-all ${carouselIndex === idx ? 'bg-orange-500 w-6' : 'bg-slate-300 w-2.5'}`}
             />
           ))}
         </div>
@@ -237,7 +279,7 @@ export const Home = () => {
 
       {/* 2. GLOBAL SEARCH & ASK AI BAR */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <form onSubmit={handleSearchSubmit} className="bg-white p-3 rounded-3xl border border-slate-200 shadow-md flex flex-col sm:flex-row items-center gap-3">
+        <form onSubmit={handleSearchSubmit} className="bg-white p-3 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center gap-3">
           <div className="flex items-center gap-3 px-4 py-2 w-full">
             <Search className="w-5 h-5 text-slate-400 shrink-0" />
             <input
@@ -245,14 +287,14 @@ export const Home = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="What service or scheme are you looking for today? Search services, schemes, certificates, scholarships and more..."
-              className="w-full bg-transparent text-slate-800 placeholder-slate-400 text-sm focus:outline-none"
+              className="w-full bg-transparent text-slate-800 placeholder-slate-400 text-xs sm:text-sm focus:outline-none"
             />
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
             <button
               type="submit"
-              className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm shadow-md transition-colors flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-3 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs shadow-sm transition-colors flex items-center justify-center gap-2"
             >
               <Search className="w-4 h-4" />
               <span>Search</span>
@@ -261,7 +303,7 @@ export const Home = () => {
             <button
               type="button"
               onClick={() => navigate('/discover?q=ai+assistant')}
-              className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold text-sm shadow-sm transition-colors flex items-center justify-center gap-2 shrink-0"
+              className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold text-xs transition-colors flex items-center justify-center gap-2 shrink-0"
             >
               <Sparkles className="w-4 h-4 text-amber-600" />
               <span>Ask GSP AI</span>
@@ -284,9 +326,8 @@ export const Home = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {currentSchemes.map((sch) => (
-            <div key={sch.id} className={`relative p-5 rounded-3xl border ${sch.bgClass} shadow-sm space-y-4 flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all`}>
-              {/* Apply Now Ribbon */}
-              <div className="absolute -right-8 top-4 rotate-45 bg-orange-500 text-white text-[10px] font-extrabold px-8 py-0.5 shadow-sm uppercase tracking-wider">
+            <div key={sch.id} className={`relative p-5 rounded-3xl border ${sch.bgClass} shadow-xs space-y-4 flex flex-col justify-between overflow-hidden group hover:shadow-md transition-all`}>
+              <div className="absolute -right-8 top-4 rotate-45 bg-orange-500 text-white text-[10px] font-extrabold px-8 py-0.5 shadow-xs uppercase tracking-wider">
                 {sch.tag}
               </div>
 
@@ -316,11 +357,11 @@ export const Home = () => {
         </div>
       </section>
 
-      {/* 4. 3-COLUMN DASHBOARD GRID (SCHOLARSHIPS | TODAY'S UPDATES | YOUR REMINDERS) */}
+      {/* 4. 3-COLUMN DASHBOARD GRID */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Column 1: 🎓 Scholarships & Opportunities */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="text-base font-bold text-slate-900 font-heading flex items-center gap-2">
@@ -350,7 +391,7 @@ export const Home = () => {
           </div>
 
           {/* Column 2: 📰 Today's Updates */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="text-base font-bold text-slate-900 font-heading flex items-center gap-2">
@@ -377,7 +418,7 @@ export const Home = () => {
           </div>
 
           {/* Column 3: ⏰ Your Reminders */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="text-base font-bold text-slate-900 font-heading flex items-center gap-2">
@@ -414,8 +455,7 @@ export const Home = () => {
       {/* 5. POPULAR SERVICES GRID + WE WILL APPLY FOR YOU BANNER */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left 2 Columns: Popular Services Grid */}
-          <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-900 font-heading flex items-center gap-2">
                 <Landmark className="w-5 h-5 text-orange-500" />
@@ -449,8 +489,7 @@ export const Home = () => {
             </div>
           </div>
 
-          {/* Right Column: 🤝 We Will Apply For You Banner */}
-          <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-orange-100 p-6 rounded-3xl border border-orange-200 shadow-sm space-y-4 flex flex-col justify-between">
+          <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-orange-100 p-6 rounded-3xl border border-orange-200 shadow-xs space-y-4 flex flex-col justify-between">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500 text-white font-bold text-xs shadow-xs">
                 <span>🤝 We Will Apply For You</span>
@@ -484,7 +523,7 @@ export const Home = () => {
             <div className="pt-4 border-t border-orange-200/80">
               <button
                 onClick={() => navigate('/services/catalog')}
-                className="w-full py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-xs shadow-md transition-colors"
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-xs shadow-sm transition-colors"
               >
                 Get Assistance Now
               </button>
@@ -495,7 +534,7 @@ export const Home = () => {
 
       {/* 6. TRUSTED BY CITIZENS METRICS BAR */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs grid grid-cols-2 sm:grid-cols-5 gap-4 text-center">
           <div className="space-y-1">
             <span className="text-xs text-slate-400 font-bold block uppercase tracking-wider">Trusted Citizens</span>
             <span className="text-xl font-black text-slate-900 font-heading">10L+</span>

@@ -58,7 +58,8 @@ export const apiService = {
   submitAssessment: (certification_code, answers) =>
     api.post('/training/assess', { certification_code, answers }),
 
-  // Freshness & Admin
+  // Dynamic Hero Banners & Freshness
+  getHeroBanners: () => api.get('/freshness/hero-banners'),
   getFreshnessMetrics: () => api.get('/freshness/metrics'),
   getFreshnessQueue: () => api.get('/freshness/queue'),
   approveSourceChange: (id) => api.post(`/freshness/approve/${id}`),

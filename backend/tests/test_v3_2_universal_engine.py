@@ -23,6 +23,8 @@ class TestGSPV32UniversalEngine(unittest.TestCase):
         self.db = SessionLocal()
 
     def tearDown(self):
+        self.db.query(models.InformationRecord).filter(models.InformationRecord.id == "rec-test-dynamic-scheme").delete()
+        self.db.commit()
         self.db.close()
 
     def test_01_empty_database_safety(self):
@@ -71,18 +73,34 @@ class TestGSPV32UniversalEngine(unittest.TestCase):
 
     def test_03_outdated_status_exclusion(self):
         """TEST 3: Marking a record OUTDATED excludes it from active verified queries."""
-        rec = self.db.query(models.InformationRecord).first()
-        initial_status = rec.verification_status
-        rec.verification_status = "OUTDATED"
+        test_rec = models.InformationRecord(
+            id="rec-test-outdated-filter",
+            title="Temporary Outdated Test Scheme",
+            description="Testing outdated status filtering",
+            information_type="GOVERNMENT_SCHEME",
+            category="Welfare Schemes",
+            organization="Test Org",
+            department="Test Dept",
+            state_id="AP",
+            source_url="https://example.gov.in",
+            published_at="2026-08-21",
+            effective_from="2026-08-21",
+            status="ACTIVE",
+            verification_status="OUTDATED",
+            badge_type="GOVERNMENT_VERIFIED",
+            source_trust_tier=1,
+            aliases=["outdated test scheme"]
+        )
+        self.db.add(test_rec)
         self.db.commit()
 
         verified = self.db.query(models.InformationRecord).filter(
-            models.InformationRecord.id == rec.id,
+            models.InformationRecord.id == "rec-test-outdated-filter",
             models.InformationRecord.verification_status == "VERIFIED"
         ).first()
         self.assertIsNone(verified)
 
-        rec.verification_status = initial_status
+        self.db.delete(test_rec)
         self.db.commit()
 
     def test_04_generic_predecessor_resolution(self):

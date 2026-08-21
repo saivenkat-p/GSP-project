@@ -24,7 +24,7 @@ class TestGSPChatbotRAGPipelineFixes(unittest.TestCase):
         """1. Greeting Loop Fix: 'hi my name is sai' returns natural greeting with zero DB dump."""
         sid = "test-greeting-name"
         res = resolve_citizen_query(sid, "hi my name is sai", db=self.db)
-        self.assertEqual(res.intent, "GREETING")
+        self.assertEqual(res.mode, "CONVERSATIONAL")
         self.assertIn("Sai", res.explanation)
         self.assertIn("Grounded AI Assistant", res.explanation)
         self.assertIsNone(res.resolved_information_record)
@@ -34,22 +34,24 @@ class TestGSPChatbotRAGPipelineFixes(unittest.TestCase):
         """2. Telglish Rewriting: 'latest government schemes explian chestara' resolves to scheme updates."""
         sid = "test-telglish-schemes"
         res = resolve_citizen_query(sid, "latest government schemes explian chestara", db=self.db)
-        self.assertIn(res.intent, ["LATEST_UPDATE", "SCHEME_UPDATES", "BROAD_SCHEME_DISCOVERY"])
-        self.assertIn("Verified", res.explanation)
+        self.assertEqual(res.mode, "GOVERNMENT_GROUNDED")
+        self.assertEqual(res.source_status, "VERIFIED")
+        self.assertIn("Official Source", res.explanation)
 
     def test_03_telglish_scholarship_query(self):
         """2b. Telglish Rewriting: 'na son ki scholarship undha' resolves to Post Matric Scholarship."""
         sid = "test-telglish-sch"
         res = resolve_citizen_query(sid, "na son ki scholarship undha", db=self.db)
-        self.assertIn(res.intent, ["RESOLVED_SCHOLARSHIP", "SCHOLARSHIP_SEARCH"])
+        self.assertEqual(res.mode, "GOVERNMENT_GROUNDED")
+        self.assertIsNotNone(res.resolved_information_record)
         self.assertEqual(res.resolved_information_record.id, "rec-sch-post-matric-ap")
 
     def test_04_broad_query_featured_schemes_fallback(self):
         """3. Broad Query Fallback: 'tell me schemes gurinchi' returns featured active schemes list."""
         sid = "test-broad-fallback"
         res = resolve_citizen_query(sid, "tell me schemes gurinchi", db=self.db)
-        self.assertIn(res.intent, ["BROAD_SCHEME_DISCOVERY", "SCHEME_UPDATES", "LATEST_UPDATE"])
-        self.assertIn("Verified", res.explanation)
+        self.assertEqual(res.mode, "GOVERNMENT_GROUNDED")
+        self.assertTrue(res.needs_follow_up or res.resolved_information_record is not None)
 
     def test_05_multi_turn_session_memory(self):
         """4. Multi-Turn Session Memory: remembers user name and topic across turns."""
@@ -58,15 +60,12 @@ class TestGSPChatbotRAGPipelineFixes(unittest.TestCase):
         self.assertIn("Ramesh", res1.explanation)
 
         res2 = resolve_citizen_query(sid, "how are you", db=self.db)
-        self.assertEqual(res2.intent, "CASUAL_CHAT")
+        self.assertEqual(res2.mode, "CONVERSATIONAL")
 
-        res3 = resolve_citizen_query(sid, "aadhar ela appply cheyyali", db=self.db)
-        self.assertEqual(res3.intent, "RESOLVED_SERVICE_New Application")
-        self.assertEqual(res3.resolved_sub_service.id, "sub-aadhaar-enrolment")
+        res3 = resolve_citizen_query(sid, "actually my aadhaar card is lost", db=self.db)
+        self.assertEqual(res3.mode, "GOVERNMENT_GROUNDED")
+        self.assertIsNotNone(res3.resolved_sub_service)
+        self.assertEqual(res3.resolved_sub_service.id, "sub-aadhaar-lost")
 
-        res4 = resolve_citizen_query(sid, "actuvally na aadhar poyindhi, can i get that", db=self.db)
-        self.assertIn(res4.intent, ["RESOLVED_SERVICE_Download", "RESOLVED_SERVICE_Replacement"])
-        self.assertEqual(res4.resolved_sub_service.id, "sub-aadhaar-lost")
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

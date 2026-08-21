@@ -10,12 +10,20 @@ import models
 from service_resolution_engine import resolve_citizen_query
 from change_detector import detect_record_changes
 from freshness_engine import approve_information_change
+from seed_data import seed_database
 
 class TestGSPV31Acceptance(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        Base.metadata.create_all(bind=engine)
+        seed_database()
+
     def setUp(self):
         self.db = SessionLocal()
 
     def tearDown(self):
+        self.db.query(models.InformationRecord).filter(models.InformationRecord.id == "rec-test-pm-kisan-v31").delete()
+        self.db.commit()
         self.db.close()
 
     def test_01_no_fake_schemes_on_empty(self):
@@ -83,6 +91,11 @@ class TestGSPV31Acceptance(unittest.TestCase):
         )
         self.assertIsNotNone(change_entry)
         self.assertIn("application_deadline", change_entry.diff_data)
+
+        # Restore verified status for subsequent tests
+        rec.verification_status = "VERIFIED"
+        rec.application_deadline = initial_deadline
+        self.db.commit()
 
     def test_05_historical_name_resolution(self):
         """TEST 5: Search 'Jagananna Vidya Deevena' resolves to current Post Matric Scholarships."""

@@ -243,11 +243,15 @@ class CandidateSuggestion(BaseModel):
     description: Optional[str] = None
 
 class AINavigationResponse(BaseModel):
+    mode: str = "CONVERSATIONAL"  # CONVERSATIONAL | GENERAL_AI | GOVERNMENT_GROUNDED
+    source_status: Optional[str] = None  # VERIFIED | VERIFICATION_PENDING | NOT_FOUND | null
+    sources: List[Dict[str, Any]] = []
+    service: Optional[SubServiceOut] = None
     intent: str
-    confidence: float
-    confidence_status: str  # VERIFIED | VERIFICATION_PENDING | NOT_FOUND | SUPERSEDED
+    confidence: float = 1.0
+    confidence_status: str = "VERIFIED"  # VERIFIED | VERIFICATION_PENDING | NOT_FOUND | SUPERSEDED
     explanation: str
-    needs_follow_up: bool
+    needs_follow_up: bool = False
     questions: List[FollowUpQuestion] = []
     resolved_sub_service: Optional[SubServiceOut] = None
     resolved_information_record: Optional[InformationRecordOut] = None

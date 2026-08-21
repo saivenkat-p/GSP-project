@@ -53,8 +53,9 @@ export const AIChatDrawer = ({ isOpen, onClose, contextSubServiceId, contextSubS
           sender: 'bot',
           text: aiData.explanation,
           intent: aiData.intent,
-          source_status: (aiData.intent?.startsWith('RESOLVED_') || aiData.intent?.startsWith('CONTEXT_') || aiData.intent === 'SCHEME_UPDATES') && aiData.confidence_status === 'VERIFIED' ? 'VERIFIED' : null,
-          service: aiData.resolved_sub_service,
+          mode: aiData.mode,
+          source_status: aiData.mode === 'GOVERNMENT_GROUNDED' && aiData.source_status === 'VERIFIED' ? 'VERIFIED' : null,
+          service: aiData.mode === 'GOVERNMENT_GROUNDED' ? aiData.resolved_sub_service : null,
           questions: aiData.questions,
           warnings: aiData.warnings
         }
@@ -65,8 +66,8 @@ export const AIChatDrawer = ({ isOpen, onClose, contextSubServiceId, contextSubS
         ...newMsgs,
         {
           sender: 'bot',
-          text: "I'm having trouble retrieving verified records. Please check back shortly or request a staff callback.",
-          source_status: 'NOT_FOUND'
+          text: "I'm having trouble retrieving verified records right now. Please check back shortly or request a staff callback.",
+          source_status: null
         }
       ]);
     } finally {
@@ -128,7 +129,7 @@ export const AIChatDrawer = ({ isOpen, onClose, contextSubServiceId, contextSubS
                 </div>
               )}
 
-              {/* Service Details Card inside chat */}
+              {/* Service Details Card inside chat (Only for government-grounded service answers) */}
               {m.service && (
                 <div className="p-3 rounded-xl bg-slate-950 border border-emerald-500/30 text-[11px] space-y-1">
                   <span className="font-bold text-emerald-400 block">{m.service.sub_service_name}</span>
@@ -142,7 +143,7 @@ export const AIChatDrawer = ({ isOpen, onClose, contextSubServiceId, contextSubS
         {loading && (
           <div className="flex items-center gap-2 text-xs text-saffron-400 p-2 bg-slate-900 rounded-xl w-fit">
             <RefreshCw className="w-4 h-4 animate-spin" />
-            <span>Retrieving verified Service Intelligence Records...</span>
+            <span>Thinking...</span>
           </div>
         )}
       </div>

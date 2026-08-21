@@ -90,7 +90,7 @@ def normalize_tanglish_to_intent_terms(query_clean: str) -> Tuple[str, Dict[str,
     for pattern, repl in replacements:
         normalized = re.sub(pattern, repl, normalized)
 
-    # Tanglish Context Extraction
+    # Tanglish & Context Extraction
     if re.search(r'\b(son|koduku|abbayi|daughter|kuturu|ammayi)\b', query_clean):
         extracted_situation["relation"] = "child"
     if re.search(r'\b(degree|btech|b tech|b sc|bsc|bcom|polytechnic|iti|college|higher education|engineering|inter|intermediate)\b', query_clean) and not re.search(r'\b(job|jobs)\b', query_clean):
@@ -103,6 +103,27 @@ def normalize_tanglish_to_intent_terms(query_clean: str) -> Tuple[str, Dict[str,
         extracted_situation["occupation"] = "unemployed"
     if re.search(r'\b(lost|poyindhi|poyindi|missed|missing)\b', query_clean):
         extracted_situation["condition"] = "lost"
+
+    # Telglish & Phrasal Conversational Normalization
+    telglish_phrases = [
+        (r'\b(my name is|i am|nenu|this is)\s+([a-zA-Z]+)\b', r'\1 \2'),
+        (r'\blatest government schemes expli?an chestara\b|\bschemes expli?an chestara\b', 'latest government schemes updates'),
+        (r'\b(schemes?|pathakalu)\s+(gurinchi\s+)?(cheppandi|cheppara|telupandi)\b', 'latest government schemes updates'),
+        (r'\b(na son|ma son|koduku|abbayi)\s+(ki\s+)?(scholarship|scholership)\s*(undha|kavali|vastada)?\b', 'post matric scholarship for degree college student'),
+        (r'\b(panta\s+nastam|crop\s+loss|rythu\s+nastam)\b', 'farmer crop loss assistance claim'),
+        (r'\b(ration\s+card(\s+lo)?\s+(peru|name)\s+(tappu|marpu|marchanu))\b', 'ration card member name correction'),
+        (r'\b(license|licence)\s+(expire|aipoyindi)\s+(em\s+cheyali|ela\s+cheyali)?\b', 'driving licence renewal parivahan'),
+        (r'\baadhaar\s+(update|updte)\s+(chesanu|chesa)\s*(ippudu\s+em\s+cheyali)?\b', 'aadhaar address update status download'),
+    ]
+    for pattern, repl in telglish_phrases:
+        if callable(repl):
+            normalized = re.sub(pattern, repl, normalized, flags=re.IGNORECASE)
+        else:
+            normalized = re.sub(pattern, repl, normalized, flags=re.IGNORECASE)
+
+    name_m = re.search(r'\b(?:my name is|i am|nenu|this is)\s+([a-zA-Z]{2,20})\b', query_clean, re.IGNORECASE)
+    if name_m:
+        extracted_situation["user_name"] = name_m.group(1).capitalize()
 
     return normalized, extracted_situation
 
@@ -495,11 +516,19 @@ def resolve_citizen_query(
     # ROUTE A: CASUAL / CONVERSATIONAL (ZERO DATABASE RAG)
     # =========================================================================
     if user_goal == "GREETING":
-        greeting_text = (
-            "నమస్కారం! నేను మీ GSP AI అసిస్టెంట్‌ని. మీకు ప్రభుత్వ పథకాలు, స్కాలర్‌షిప్‌లు, సర్టిఫికెట్లు లేదా ఇతర సేవల గురించి ఏదైనా సమాచారం కావాలా?"
-            if lang == "TELUGU" else
-            "Hello! I'm your GSP Grounded AI Assistant. I can help you with verified government schemes, scholarships, certificates, eligibility criteria, document requirements, and citizen application procedures.\n\nWhat can I help you with today?"
-        )
+        user_name = session_ctx.get("user_situation", {}).get("user_name") or session_ctx.get("user_name")
+        if user_name:
+            greeting_text = (
+                f"నమస్కారం {user_name}! నేను మీ GSP AI అసిస్టెంట్‌ని. మీకు ప్రభుత్వ పథకాలు, స్కాలర్‌షిప్‌లు, సర్టిఫికెట్లు లేదా ఇతర సేవల గురించి ఏదైనా సమాచారం కావాలా?"
+                if lang == "TELUGU" else
+                f"Hello {user_name}! I'm your GSP Grounded AI Assistant. I can help you with verified government schemes, scholarships, certificates, eligibility criteria, document requirements, and citizen application procedures.\n\nWhat can I help you with today?"
+            )
+        else:
+            greeting_text = (
+                "నమస్కారం! నేను మీ GSP AI అసిస్టెంట్‌ని. మీకు ప్రభుత్వ పథకాలు, స్కాలర్‌షిప్‌లు, సర్టిఫికెట్లు లేదా ఇతర సేవల గురించి ఏదైనా సమాచారం కావాలా?"
+                if lang == "TELUGU" else
+                "Hello! I'm your GSP Grounded AI Assistant. I can help you with verified government schemes, scholarships, certificates, eligibility criteria, document requirements, and citizen application procedures.\n\nWhat can I help you with today?"
+            )
         return schemas.AINavigationResponse(
             intent="GREETING",
             confidence=1.0,
@@ -1159,9 +1188,37 @@ def resolve_citizen_query(
         )
 
     # =========================================================================
-    # STEP 6: DIRECT RELEVANCE THRESHOLD CHECK
+    # STEP 6: DIRECT RELEVANCE THRESHOLD CHECK & BROAD SCHEME FALLBACK
     # =========================================================================
     if not has_direct_topic_match:
+        is_broad_query = any(w in norm_query.split() for w in ["scheme", "schemes", "update", "updates", "help", "govt", "government", "welfare", "benefit", "services", "explian", "explain", "cheppandi", "telupandi"])
+        if is_broad_query:
+            featured_records = db.query(models.InformationRecord).filter(
+                models.InformationRecord.status == "ACTIVE"
+            ).order_by(models.InformationRecord.last_verified.desc()).limit(4).all()
+            if featured_records:
+                lines = ["📢 **Top Verified & Featured Government Schemes**:\n"]
+                for idx, r in enumerate(featured_records, 1):
+                    b_str = f" • Verified Benefit: {r.benefit_amount_str}" if r.benefit_amount_str else ""
+                    lines.append(f"{idx}. **{r.title}**\n   {r.description}{b_str}\n   *Official Portal: {r.source_url}*")
+                lines.append("\n🟢 **Official Sources — VERIFIED**")
+                rec_out = schemas.InformationRecordOut.model_validate(featured_records[0])
+                session_ctx["last_information_record_id"] = featured_records[0].id
+                session_ctx["last_topic_name"] = featured_records[0].title
+                return schemas.AINavigationResponse(
+                    intent="BROAD_SCHEME_DISCOVERY",
+                    confidence=0.85,
+                    confidence_status="VERIFIED",
+                    explanation="\n\n".join(lines),
+                    needs_follow_up=False,
+                    resolved_information_record=rec_out,
+                    candidate_suggestions=[
+                        schemas.CandidateSuggestion(id=r.id, name=r.title, category=r.category)
+                        for r in featured_records
+                    ],
+                    warnings=[]
+                )
+
         return schemas.AINavigationResponse(
             intent="UNKNOWN",
             confidence=0.0,

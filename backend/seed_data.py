@@ -365,6 +365,7 @@ def seed_database():
                 "version": "V2.0",
                 "last_checked": "2026-08-21",
                 "last_verified": "2026-08-21",
+                "historical_names": ["Jagananna Vidya Deevena", "Vidya Deevena", "JVD"],
                 "aliases": ["jagananna vidya deevena", "vidya deevena", "post matric scholarship ap", "engineering fee reimbursement", "degree scholarship ap"],
                 "keywords": ["scholarship", "higher education", "fee waiver", "epass"],
                 "banner_priority": 95,
@@ -812,6 +813,40 @@ def seed_database():
                         "processing_time": "Instant Online Download",
                         "physical_presence_requirement": "NOT_REQUIRED",
                         "official_portal_url": "https://myaadhaar.uidai.gov.in",
+                        "official_source_url": "https://uidai.gov.in"
+                    },
+                    {
+                        "id": "sub-aadhaar-enrolment",
+                        "sub_service_name": "New Aadhaar Enrolment & Fresh Application (UIDAI Enrolment Centre)",
+                        "action_type": "New Application",
+                        "aliases": [
+                            "new aadhaar apply", "aadhaar enrolment", "how to apply for aadhaar",
+                            "aadhar ela apply cheyyali", "aadhar ela appply cheyyali", "apply aadhaar", "fresh aadhaar card",
+                            "first time aadhaar", "aadhar apply", "how do i apply for aadhaar", "how to apply aadhaar"
+                        ],
+                        "keywords": ["enrolment", "fresh aadhaar", "new card", "seva kendra", "biometric enrolment"],
+                        "official_fee": 0.0,
+                        "processing_time": "30-90 Days",
+                        "physical_presence_requirement": "MANDATORY",
+                        "official_portal_url": "https://appointments.uidai.gov.in/",
+                        "official_source_url": "https://uidai.gov.in"
+                    },
+                    {
+                        "id": "sub-aadhaar-lost",
+                        "sub_service_name": "Lost Aadhaar Retrieval & Duplicate e-Aadhaar Download (myAadhaar)",
+                        "action_type": "Replacement",
+                        "aliases": [
+                            "lost aadhaar", "aadhar poyindhi", "aadhar miss ayindi",
+                            "actuvally na aadhar poyindhi can i get that", "actually na aadhar poyindhi can i get that",
+                            "actually na aadhar poyindhi", "na aadhar poyindhi", "lost my aadhaar card",
+                            "how to get lost aadhaar", "aadhar card missing", "can i get lost aadhaar",
+                            "lost aadhar", "na aadhar poyindhi can i get that", "aadhar poyindhi can i get that"
+                        ],
+                        "keywords": ["lost aadhaar", "retrieve uid", "duplicate aadhaar", "lost card", "myaadhaar retrieval"],
+                        "official_fee": 0.0,
+                        "processing_time": "Instant Online Retrieval",
+                        "physical_presence_requirement": "NOT_REQUIRED",
+                        "official_portal_url": "https://myaadhaar.uidai.gov.in/retrieve-eid-uid",
                         "official_source_url": "https://uidai.gov.in"
                     }
                 ]

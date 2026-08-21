@@ -15,15 +15,17 @@ export const AIChatDrawer = ({ isOpen, onClose, contextSubServiceId, contextSubS
         {
           sender: 'bot',
           text: `Hello! I can help you with **${contextSubServiceName}**. What would you like to know?`,
-          source_status: 'VERIFIED'
+          source_status: null,
+          intent: 'GREETING'
         }
       ]);
     } else {
       setMessages([
         {
           sender: 'bot',
-          text: "Hello! I'm your GSP Grounded AI Assistant. Describe what you need help with (e.g. 'Father name wrong in birth certificate').",
-          source_status: 'VERIFIED'
+          text: "Hello! I'm your GSP Grounded AI Assistant. I can help you with verified government schemes, scholarships, certificates, eligibility, and citizen applications.\n\nWhat can I help you with today?",
+          source_status: null,
+          intent: 'GREETING'
         }
       ]);
     }
@@ -50,7 +52,8 @@ export const AIChatDrawer = ({ isOpen, onClose, contextSubServiceId, contextSubS
         {
           sender: 'bot',
           text: aiData.explanation,
-          source_status: aiData.confidence_status,
+          intent: aiData.intent,
+          source_status: (aiData.intent?.startsWith('RESOLVED_') || aiData.intent?.startsWith('CONTEXT_') || aiData.intent === 'SCHEME_UPDATES') && aiData.confidence_status === 'VERIFIED' ? 'VERIFIED' : null,
           service: aiData.resolved_sub_service,
           questions: aiData.questions,
           warnings: aiData.warnings

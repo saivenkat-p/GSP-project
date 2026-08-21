@@ -71,6 +71,177 @@ class User(Base):
     service_requests = relationship("ServiceRequest", back_populates="citizen", foreign_keys="[ServiceRequest.citizen_id]")
 
 
+# --- V3 SOURCE REGISTRY & REAL INFORMATION MODELS ---
+class InformationSource(Base):
+    __tablename__ = "information_sources"
+
+    id = Column(String, primary_key=True, index=True)  # e.g. "src-ap-meeseva", "src-uidai", "src-lic-india"
+    name = Column(String, nullable=False)
+    organization = Column(String, nullable=False)  # e.g. "Government of Andhra Pradesh", "UIDAI", "LIC of India"
+    
+    # Source Types: GOVERNMENT, STATE_GOVERNMENT, CENTRAL_GOVERNMENT, PSU, OFFICIAL_ORGANIZATION, PRIVATE_ORGANIZATION, NEWS, OTHER
+    source_type = Column(String, nullable=False, default="STATE_GOVERNMENT")
+    
+    # Source Priority / Trust Tier: PRIMARY_OFFICIAL (Tier 1), SECONDARY_OFFICIAL (Tier 2), ORGANIZATION_OFFICIAL (Tier 3), DISCOVERY_ONLY (Tier 4)
+    source_priority = Column(String, nullable=False, default="PRIMARY_OFFICIAL")
+    trust_tier = Column(Integer, nullable=False, default=1)  # 1, 2, 3, 4
+    
+    base_url = Column(String, nullable=False)
+    official_url = Column(String, nullable=False)
+    state_scope = Column(String, nullable=False, default="AP")  # "NAT" for National or state code
+    department = Column(String, nullable=False, default="General Administration")
+    
+    active = Column(Boolean, default=True)
+    last_checked = Column(String, nullable=False, default="2026-08-21")
+    last_successful_fetch = Column(String, nullable=False, default="2026-08-21")
+    check_frequency_hours = Column(Integer, default=24)
+    robots_allowed = Column(Boolean, default=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    records = relationship("InformationRecord", back_populates="source")
+
+
+class InformationRecord(Base):
+    __tablename__ = "information_records"
+
+    id = Column(String, primary_key=True, index=True)  # e.g. "rec-sch-vidya-deevena", "rec-sch-rythu-bharosa"
+    
+    title = Column(String, nullable=False, index=True)
+    previous_title = Column(String, nullable=True, index=True)
+    description = Column(Text, nullable=False)
+    
+    # Information Types:
+    # GOVERNMENT_SCHEME, GOVERNMENT_BENEFIT, SCHOLARSHIP, PRIVATE_SCHOLARSHIP, CORPORATE_SCHOLARSHIP,
+    # EDUCATIONAL_OPPORTUNITY, GOVERNMENT_NOTIFICATION, SERVICE_UPDATE, RULE_CHANGE, FEE_CHANGE, DEADLINE_CHANGE, OTHER
+    information_type = Column(String, nullable=False, default="GOVERNMENT_SCHEME")
+    category = Column(String, nullable=False, default="Welfare Schemes")
+    
+    organization = Column(String, nullable=False)
+    department = Column(String, nullable=False)
+    
+    state_id = Column(String, nullable=False, default="AP")
+    district_id = Column(String, nullable=True, default="ALL")
+    mandal_id = Column(String, nullable=True, default="ALL")
+    
+    source_id = Column(String, ForeignKey("information_sources.id"), nullable=True)
+    source_url = Column(String, nullable=False)
+    
+    published_at = Column(String, nullable=False, default="2026-08-01")
+    effective_from = Column(String, nullable=False, default="2026-08-01")
+    effective_until = Column(String, nullable=True)
+    
+    application_start = Column(String, nullable=True)
+    application_deadline = Column(String, nullable=True)
+    
+    benefit_amount_str = Column(String, nullable=True)
+    eligibility_criteria = Column(JSON, nullable=False, default=[])
+    required_documents = Column(JSON, nullable=False, default=[])
+    diy_steps = Column(JSON, nullable=False, default=[])
+    
+    # Fees Separation
+    official_statutory_fee = Column(Float, nullable=False, default=0.0)
+    gsp_assistance_fee = Column(Float, nullable=False, default=150.0)
+    partner_fee = Column(Float, nullable=False, default=100.0)
+    
+    # Status & Verification
+    status = Column(String, nullable=False, default="ACTIVE")  # "ACTIVE", "ARCHIVED"
+    # Verification States: VERIFIED, VERIFICATION_PENDING, OUTDATED, SUPERSEDED, REJECTED
+    verification_status = Column(String, nullable=False, default="VERIFIED")
+    
+    # Trust Badges: GOVERNMENT_VERIFIED (🟢), ORGANIZATION_VERIFIED (🔵), PENDING_VERIFICATION (🟡)
+    badge_type = Column(String, nullable=False, default="GOVERNMENT_VERIFIED")
+    source_trust_tier = Column(Integer, nullable=False, default=1)
+    
+    # Versioning
+    version = Column(String, nullable=False, default="V1.0")
+    previous_version_id = Column(String, nullable=True)
+    current_version_id = Column(String, nullable=True)
+    
+    content_hash = Column(String, nullable=True)
+    last_checked = Column(String, nullable=False, default="2026-08-21")
+    last_verified = Column(String, nullable=False, default="2026-08-21")
+    
+    # Aliases & Search Keywords
+    aliases = Column(JSON, nullable=False, default=[])
+    historical_names = Column(JSON, nullable=False, default=[])  # List of older/historical scheme names
+    keywords = Column(JSON, nullable=False, default=[])
+    superseded_by_id = Column(String, nullable=True)  # References successor InformationRecord.id if superseded
+    is_demo_data = Column(Boolean, default=False)
+    
+    # Promotional Banner Priority (Higher = prioritized for hero rotation)
+    banner_priority = Column(Integer, default=10)
+    is_promotional = Column(Boolean, default=True)
+    color_theme = Column(String, default="emerald")
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    source = relationship("InformationSource", back_populates="records")
+    version_snapshots = relationship("InformationVersionHistory", back_populates="information_record")
+
+
+class InformationVersionHistory(Base):
+    __tablename__ = "information_version_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    record_id = Column(String, ForeignKey("information_records.id"), nullable=False)
+    version_code = Column(String, nullable=False)  # "V1.0", "V1.1"
+    
+    title_snapshot = Column(String, nullable=False)
+    previous_title_snapshot = Column(String, nullable=True)
+    benefit_snapshot = Column(String, nullable=True)
+    deadline_snapshot = Column(String, nullable=True)
+    eligibility_snapshot = Column(JSON, nullable=True)
+    
+    change_summary = Column(Text, nullable=False)
+    diff_json = Column(JSON, nullable=False)
+    
+    approved_by_admin = Column(String, nullable=False, default="System")
+    official_effective_date = Column(String, nullable=False, default="2026-08-21")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    information_record = relationship("InformationRecord", back_populates="version_snapshots")
+
+
+class OfficialProfile(Base):
+    __tablename__ = "official_profiles"
+
+    id = Column(String, primary_key=True, index=True)  # e.g. "off-ap-cm", "off-ntr-collector"
+    name = Column(String, nullable=False)
+    designation = Column(String, nullable=False)  # e.g. "Chief Minister of Andhra Pradesh", "District Collector, NTR"
+    department = Column(String, nullable=False)
+    state_id = Column(String, nullable=False, default="AP")
+    district_id = Column(String, nullable=True, default="AP-NTR")
+    
+    photo_url = Column(String, nullable=True)
+    official_source_url = Column(String, nullable=False, default="https://ap.gov.in")
+    
+    verification_status = Column(String, nullable=False, default="VERIFIED")
+    last_verified = Column(String, nullable=False, default="2026-08-21")
+    effective_from = Column(String, nullable=False, default="2024-06-12")
+    effective_until = Column(String, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class AdminAuditLog(Base):
+    __tablename__ = "admin_audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    admin_username = Column(String, nullable=False)
+    action_type = Column(String, nullable=False)  # "APPROVED_VERSION", "REJECTED_CHANGE", "UPDATED_OFFICIAL", "MODIFIED_FEE", "MANUAL_OVERRIDE"
+    record_type = Column(String, nullable=False)  # "InformationRecord", "SubService", "OfficialProfile"
+    record_id = Column(String, nullable=False)
+    old_value = Column(JSON, nullable=True)
+    new_value = Column(JSON, nullable=True)
+    source_url = Column(String, nullable=True)
+    reason = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 # --- SERVICE INTELLIGENCE KNOWLEDGE BASE MODELS ---
 class Service(Base):
     __tablename__ = "services"
@@ -91,7 +262,7 @@ class Service(Base):
 
     # Governance & Verification Status
     verification_status = Column(String, nullable=False, default="VERIFIED") # VERIFIED | VERIFICATION_PENDING | UNVERIFIED_DEMO
-    last_verified = Column(String, nullable=False, default="2026-08-20")
+    last_verified = Column(String, nullable=False, default="2026-08-21")
 
     # Sub-services relationship
     sub_services = relationship("SubService", back_populates="parent_service")
@@ -125,10 +296,10 @@ class SubService(Base):
     official_source_url = Column(String, nullable=False, default="https://ap.meeseva.gov.in")
     
     # Freshness, Versioning & Verification Status
-    information_version = Column(String, nullable=False, default="V1.0")
-    last_checked = Column(String, nullable=False, default="2026-08-20")
-    last_verified = Column(String, nullable=False, default="2026-08-20")
-    confidence_status = Column(String, nullable=False, default="VERIFIED")  # "VERIFIED" | "VERIFICATION_PENDING" | "OUTDATED"
+    current_version = Column(String, nullable=False, default="V1.0")
+    last_checked = Column(String, nullable=False, default="2026-08-21")
+    last_verified = Column(String, nullable=False, default="2026-08-21")
+    confidence_status = Column(String, nullable=False, default="VERIFIED")  # "VERIFIED" | "VERIFICATION_PENDING" | "OUTDATED" | "SUPERSEDED"
     
     # Required Partner Certification ID to handle this sub-service
     required_certification_code = Column(String, nullable=False, default="CERT-CIVIL-GEN")
@@ -156,9 +327,11 @@ class SourceChangeQueue(Base):
     __tablename__ = "source_change_queue"
 
     id = Column(Integer, primary_key=True, index=True)
-    sub_service_id = Column(String, ForeignKey("sub_services.id"), nullable=False)
+    sub_service_id = Column(String, nullable=True)
+    information_record_id = Column(String, nullable=True)
     source_url = Column(String, nullable=False)
     detected_change_summary = Column(Text, nullable=False)
+    change_type = Column(String, default="RULE_CHANGE")  # "TITLE_CHANGE", "FEE_CHANGE", "DEADLINE_CHANGE", "DOCUMENT_CHANGE", "RULE_CHANGE"
     diff_data = Column(JSON, nullable=False)
     review_status = Column(String, default="PENDING")  # "PENDING", "APPROVED", "REJECTED"
     created_at = Column(DateTime, default=datetime.utcnow)

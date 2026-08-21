@@ -63,24 +63,22 @@ export const ServiceCatalogPage = () => {
     }
   };
 
-  const masterCategoriesList = [
-    'All',
-    'Identity & Citizen Documents',
-    'Birth & Death Services',
-    'Revenue & Certificates',
-    'Land & Property',
-    'Registration & Stamps',
-    'Driving Licence & Transport',
-    'Ration Card & Civil Supplies',
-    'Welfare Schemes & Social Security',
-    'Health Services',
-    'Education',
-    'Voter Services',
-    'Passport & Consular',
-    'Agriculture',
-    'Municipal Services',
-    'Electricity & Water'
-  ];
+  const [categoriesList, setCategoriesList] = useState(['All']);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await apiService.getCategories('AP');
+      if (res.data && res.data.length > 0) {
+        setCategoriesList(res.data);
+      }
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+    }
+  };
 
   const intentFilterButtons = [
     { label: 'ALL', value: 'ALL' },
@@ -253,7 +251,7 @@ export const ServiceCatalogPage = () => {
 
       {/* Categories Filter Bar */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 text-xs no-scrollbar">
-        {masterCategoriesList.map((cat) => (
+        {categoriesList.map((cat) => (
           <button
             key={cat}
             onClick={() => setActiveCategory(cat)}

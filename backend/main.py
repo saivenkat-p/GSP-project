@@ -4,7 +4,7 @@ import os
 
 from database import engine, Base
 from seed_data import seed_database
-from routers import services, ai, auth_router, partners, requests, admin, locations, staff, training, freshness
+from routers import services, ai, auth_router, partners, requests, admin, locations, staff, training, freshness, information
 
 # Initialize database schema & seed data
 Base.metadata.create_all(bind=engine)
@@ -14,9 +14,9 @@ except Exception as e:
     print(f"Startup database seeding note: {e}")
 
 app = FastAPI(
-    title="Government Service Provider (GSP V2) API",
-    description="AI-Powered Government Service Discovery, Guidance, Human Assistance & Verified Partner Network",
-    version="2.0.0"
+    title="Government Service Provider (GSP V3) API",
+    description="AI-Powered Real Information & Trust Engine, Service Discovery, Guidance & Partner Network",
+    version="3.0.0"
 )
 
 # Configure CORS for React frontend
@@ -36,6 +36,7 @@ app.add_middleware(
 
 # Register API Routers
 app.include_router(locations.router)
+app.include_router(information.router)
 app.include_router(services.router)
 app.include_router(ai.router)
 app.include_router(auth_router.router)
@@ -50,12 +51,13 @@ app.include_router(admin.router)
 def health_check():
     return {
         "status": "online",
-        "app": "GSP V2 Intelligence API",
-        "version": "2.0.0",
+        "app": "GSP V3 Real Information & Trust Engine",
+        "version": "3.0.0",
         "database": "SQLite (Development) / PostgreSQL Ready",
         "location_hierarchy": "Multi-State (State -> District -> Mandal -> Locality)",
-        "service_records": "Service Intelligence Records (Grounded RAG)",
-        "last_source_audit": "2026-08-20"
+        "source_registry": "Tier 1-4 Strict Trust Hierarchy",
+        "verification_governance": "Active with Version History & Audit Logging",
+        "last_source_audit": "2026-08-21"
     }
 
 if __name__ == "__main__":

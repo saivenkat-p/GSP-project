@@ -50,6 +50,125 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user: Dict[str, Any]
 
+# --- V3 SOURCE REGISTRY SCHEMAS ---
+class InformationSourceOut(BaseModel):
+    id: str
+    name: str
+    organization: str
+    source_type: str
+    source_priority: str
+    trust_tier: int
+    base_url: str
+    official_url: str
+    state_scope: str
+    department: str
+    active: bool
+    last_checked: str
+    last_successful_fetch: str
+    check_frequency_hours: int
+    robots_allowed: bool
+
+    class Config:
+        from_attributes = True
+
+# --- V3 INFORMATION RECORD SCHEMAS ---
+class InformationVersionHistoryOut(BaseModel):
+    id: int
+    record_id: str
+    version_code: str
+    title_snapshot: str
+    previous_title_snapshot: Optional[str] = None
+    benefit_snapshot: Optional[str] = None
+    deadline_snapshot: Optional[str] = None
+    eligibility_snapshot: Optional[Any] = None
+    change_summary: str
+    diff_json: Dict[str, Any]
+    approved_by_admin: str
+    official_effective_date: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class InformationRecordOut(BaseModel):
+    id: str
+    title: str
+    previous_title: Optional[str] = None
+    description: str
+    information_type: str
+    category: str
+    organization: str
+    department: str
+    state_id: str
+    district_id: Optional[str] = "ALL"
+    mandal_id: Optional[str] = "ALL"
+    source_id: Optional[str] = None
+    source_url: str
+    published_at: str
+    effective_from: str
+    effective_until: Optional[str] = None
+    application_start: Optional[str] = None
+    application_deadline: Optional[str] = None
+    benefit_amount_str: Optional[str] = None
+    eligibility_criteria: List[str] = []
+    required_documents: List[Dict[str, Any]] = []
+    diy_steps: List[str] = []
+    official_statutory_fee: float = 0.0
+    gsp_assistance_fee: float = 150.0
+    partner_fee: float = 100.0
+    status: str
+    verification_status: str  # VERIFIED, VERIFICATION_PENDING, OUTDATED, SUPERSEDED, REJECTED
+    badge_type: str  # GOVERNMENT_VERIFIED, ORGANIZATION_VERIFIED, PENDING_VERIFICATION
+    source_trust_tier: int
+    version: str
+    previous_version_id: Optional[str] = None
+    current_version_id: Optional[str] = None
+    content_hash: Optional[str] = None
+    last_checked: str
+    aliases: List[str] = []
+    historical_names: List[str] = []
+    keywords: List[str] = []
+    superseded_by_id: Optional[str] = None
+    is_demo_data: bool = False
+    banner_priority: int = 10
+    is_promotional: bool = True
+    color_theme: str = "emerald"
+
+    class Config:
+        from_attributes = True
+
+class OfficialProfileOut(BaseModel):
+    id: str
+    name: str
+    designation: str
+    department: str
+    state_id: str
+    district_id: Optional[str] = None
+    photo_url: Optional[str] = None
+    official_source_url: str
+    verification_status: str
+    last_verified: str
+    effective_from: str
+    effective_until: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class AdminAuditLogOut(BaseModel):
+    id: int
+    admin_username: str
+    action_type: str
+    record_type: str
+    record_id: str
+    old_value: Optional[Dict[str, Any]] = None
+    new_value: Optional[Dict[str, Any]] = None
+    source_url: Optional[str] = None
+    reason: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 # --- SERVICE INTELLIGENCE RECORD SCHEMAS ---
 class SubServiceOut(BaseModel):
     id: str
@@ -69,10 +188,10 @@ class SubServiceOut(BaseModel):
     physical_presence_reason: Optional[str] = None
     official_portal_url: str
     official_source_url: str
-    information_version: str = "V1.0"
+    current_version: str = "V1.0"
     last_checked: str
     last_verified: str
-    confidence_status: str  # VERIFIED | VERIFICATION_PENDING | OUTDATED
+    confidence_status: str  # VERIFIED | VERIFICATION_PENDING | OUTDATED | SUPERSEDED
     required_certification_code: str
     is_demo_data: bool
 
@@ -90,76 +209,55 @@ class ServiceIntelligenceOut(BaseModel):
     aliases: List[str] = []
     keywords: List[str] = []
     verification_status: str = "VERIFIED"
-    last_verified: str = "2026-08-20"
+    last_verified: str = "2026-08-21"
     sub_services: List[SubServiceOut] = []
 
     class Config:
         from_attributes = True
 
-# --- GROUNDED AI CHAT & NAVIGATION SCHEMAS ---
-class FollowUpQuestion(BaseModel):
-    field: str
-    question: str
-    options: Optional[List[str]] = None
+class TaxonomySummaryOut(BaseModel):
+    total_categories: int
+    total_services: int
+    total_sub_services: int
+    total_verified_records: int
+    categories: List[str]
 
+# --- GROUNDED AI CHAT & NAVIGATION SCHEMAS ---
 class AIChatRequest(BaseModel):
     session_id: Optional[str] = "session-default"
     query: str
     state_id: Optional[str] = "AP"
     district_id: Optional[str] = "AP-NTR"
     mandal_name: Optional[str] = "Vijayawada Urban"
-    selected_answers: Optional[Dict[str, str]] = Field(default_factory=dict)
+    selected_answers: Optional[Dict[str, str]] = None
+
+class FollowUpQuestion(BaseModel):
+    field: str
+    question: str
+    options: List[str]
+
+class CandidateSuggestion(BaseModel):
+    id: str
+    name: str
+    category: str
+    description: Optional[str] = None
 
 class AINavigationResponse(BaseModel):
-    session_id: str
     intent: str
     confidence: float
+    confidence_status: str  # VERIFIED | VERIFICATION_PENDING | NOT_FOUND | SUPERSEDED
+    explanation: str
     needs_follow_up: bool
     questions: List[FollowUpQuestion] = []
-    service: Optional[ServiceIntelligenceOut] = None
     resolved_sub_service: Optional[SubServiceOut] = None
-    candidate_suggestions: List[Dict[str, Any]] = []
-    eligibility: List[str] = []
+    resolved_information_record: Optional[InformationRecordOut] = None
+    historical_superseded_notice: Optional[Dict[str, Any]] = None
+    candidate_suggestions: List[CandidateSuggestion] = []
     documents: List[Dict[str, Any]] = []
-    official_fee: Optional[float] = None
-    gsp_assistance_fee: Optional[float] = None
-    processing_time: Optional[str] = None
-    physical_presence: Optional[str] = None
-    official_source: Optional[str] = None
-    source_last_verified: Optional[str] = None
-    confidence_status: str = "VERIFIED" # VERIFIED | VERIFICATION_PENDING | OUTDATED | NOT_FOUND
-    explanation: str
+    eligibility: List[str] = []
+    official_fee: float = 0.0
+    source_last_verified: Optional[str] = "2026-08-21"
     warnings: List[str] = []
-
-# --- LEAD & SERVICE REQUEST SCHEMAS ---
-class ServiceRequestCreate(BaseModel):
-    sub_service_id: str
-    assistance_tier: str = "LEVEL_B_FORM_HELP" # LEVEL_A_DIY | LEVEL_B_FORM_HELP | LEVEL_C_PROCESS_HELP | LEVEL_D_FULL_HELP
-    citizen_location_str: Optional[str] = "Vijayawada, NTR District (AP)"
-    notes: Optional[str] = None
-    callback_requested: bool = True
-
-class ServiceRequestOut(BaseModel):
-    id: int
-    citizen_id: int
-    sub_service_id: str
-    partner_id: Optional[int]
-    staff_id: Optional[int]
-    assistance_tier: str
-    status: str
-    citizen_location_str: str
-    official_application_no: Optional[str]
-    notes: Optional[str]
-    callback_requested: bool
-    official_statutory_fee: float
-    gsp_assistance_fee: float
-    partner_commission: float
-    created_at: datetime
-    updated_at: datetime
-    sub_service: Optional[SubServiceOut]
-
-    class Config:
-        from_attributes = True
 
 # --- PARTNER & TRAINING SCHEMAS ---
 class PartnerProfileOut(BaseModel):
@@ -179,3 +277,73 @@ class PartnerProfileOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+class TrainingCourseOut(BaseModel):
+    id: str
+    certification_code: str
+    title: str
+    category: str
+    description: str
+    modules_json: List[Dict[str, Any]]
+    passing_score: int
+
+    class Config:
+        from_attributes = True
+
+# --- SERVICE REQUEST & LEAD SCHEMAS ---
+class RequestNoteOut(BaseModel):
+    id: int
+    author_name: str
+    author_role: str
+    note_text: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class ServiceRequestOut(BaseModel):
+    id: int
+    citizen_id: int
+    sub_service_id: Optional[str] = None
+    partner_id: Optional[int] = None
+    staff_id: Optional[int] = None
+    assistance_tier: str
+    status: str
+    citizen_location_str: str
+    official_application_no: Optional[str] = None
+    notes: Optional[str] = None
+    callback_requested: bool
+    scheduled_callback_time: Optional[str] = None
+    official_statutory_fee: float
+    gsp_assistance_fee: float
+    partner_commission: float
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    sub_service: Optional[SubServiceOut] = None
+    partner: Optional[PartnerProfileOut] = None
+    notes_history: List[RequestNoteOut] = []
+
+    class Config:
+        from_attributes = True
+
+class ServiceRequestCreate(BaseModel):
+    sub_service_id: Optional[str] = None
+    information_record_id: Optional[str] = None
+    assistance_tier: str = "LEVEL_B_FORM_HELP"
+    citizen_location_str: str
+    notes: Optional[str] = None
+    callback_requested: bool = True
+
+class CallbackRequestCreate(BaseModel):
+    citizen_name: str
+    phone: str
+    service_needed: Optional[str] = "General Government Service Guidance"
+    preferred_time: Optional[str] = "Within 30 Minutes"
+    location_str: Optional[str] = "Vijayawada, NTR District (AP)"
+    requirement_notes: Optional[str] = None
+
+class LeadStatusUpdate(BaseModel):
+    status: str
+    notes: Optional[str] = None
+    official_application_no: Optional[str] = None
+    partner_id: Optional[int] = None

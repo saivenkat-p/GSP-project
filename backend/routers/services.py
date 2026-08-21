@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from database import get_db
 import models
@@ -16,14 +16,65 @@ def get_services(
     query: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
+    """
+    Returns statutory parent services and sub-services.
+    Includes state-specific services + National (NAT/ALL) services so Central Govt services do not disappear.
+    """
     q = db.query(models.Service)
     if category and category != "All":
         q = q.filter(models.Service.category == category)
     if state_id and state_id != "All":
-        q = q.filter(models.Service.state_scope == state_id)
+        q = q.filter(models.Service.state_scope.in_([state_id, "NAT", "ALL"]))
     if query:
         q = q.filter(models.Service.official_name.ilike(f"%{query}%"))
     return q.all()
+
+@router.get("/categories")
+def get_service_categories(
+    state_id: Optional[str] = "AP",
+    db: Session = Depends(get_db)
+):
+    """
+    Returns unique statutory categories directly from the database (Phase 3).
+    """
+    q = db.query(models.Service.category).distinct()
+    if state_id and state_id != "All":
+        q = q.filter(models.Service.state_scope.in_([state_id, "NAT", "ALL"]))
+    categories = [c[0] for c in q.all() if c[0]]
+    return ["All"] + sorted(categories)
+
+@router.get("/taxonomy/summary", response_model=schemas.TaxonomySummaryOut)
+def get_taxonomy_summary(
+    state_id: Optional[str] = "AP",
+    db: Session = Depends(get_db)
+):
+    """
+    Returns live dynamically computed taxonomy counts from the database.
+    Zero fabricated numbers (Phase 11).
+    """
+    services_q = db.query(models.Service)
+    if state_id and state_id != "All":
+        services_q = services_q.filter(models.Service.state_scope.in_([state_id, "NAT", "ALL"]))
+    
+    total_services = services_q.count()
+    
+    sub_q = db.query(models.SubService)
+    total_sub_services = sub_q.count()
+    
+    cats = [c[0] for c in db.query(models.Service.category).distinct().all() if c[0]]
+    
+    verified_records = db.query(models.InformationRecord).filter(
+        models.InformationRecord.verification_status == "VERIFIED",
+        models.InformationRecord.status == "ACTIVE"
+    ).count()
+
+    return {
+        "total_categories": len(cats),
+        "total_services": total_services,
+        "total_sub_services": total_sub_services,
+        "total_verified_records": verified_records,
+        "categories": sorted(cats)
+    }
 
 @router.get("/search", response_model=schemas.AINavigationResponse)
 def universal_service_search(
@@ -58,20 +109,19 @@ def get_service_catalog_by_id(
         raise HTTPException(status_code=404, detail="Service record not found")
 
     if query:
-        query_clean = query.lower()
-        filtered_sub = [
-            sub for sub in srv.sub_services
-            if query_clean in sub.sub_service_name.lower()
-            or query_clean in sub.action_type.lower()
-            or any(query_clean in alias.lower() for alias in (sub.aliases or []))
-            or any(query_clean in kw.lower() for kw in (sub.keywords or []))
+        srv.sub_services = [
+            sub for sub in srv.sub_services 
+            if query.lower() in sub.sub_service_name.lower() 
+            or query.lower() in sub.action_type.lower()
+            or any(query.lower() in a.lower() for a in (sub.aliases or []))
         ]
-        srv.sub_services = filtered_sub
-
     return srv
 
 @router.get("/sub-services/{sub_id}", response_model=schemas.SubServiceOut)
-def get_sub_service_by_id(sub_id: str, db: Session = Depends(get_db)):
+def get_sub_service_by_id(
+    sub_id: str,
+    db: Session = Depends(get_db)
+):
     sub = db.query(models.SubService).filter(models.SubService.id == sub_id).first()
     if not sub:
         raise HTTPException(status_code=404, detail="Sub-service record not found")
